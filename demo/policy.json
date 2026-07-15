@@ -1,0 +1,8 @@
+{
+  "prohibited_phrases": ["instantly"],
+  "absolute_claims": ["guaranteed", "best", "every"],
+  "require_cta": true,
+  "cta_phrases": ["learn more", "get started", "request a demo"],
+  "channel_limits": {"social": 280, "email": 4000, "landing_page": 8000, "ad": 120}
+}
+
