@@ -30,6 +30,16 @@ flowchart LR
 
 ## Quick start
 
+Browser demo:
+
+```bash
+python app.py
+```
+
+Open `http://localhost:8001` to review synthetic campaign copy in the polished interface.
+
+Command line:
+
 Requires Python 3.11+ and has no external dependencies.
 
 ```bash
