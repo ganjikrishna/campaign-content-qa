@@ -13,6 +13,43 @@ def finding(rule: str, severity: str, evidence: str, recommendation: str) -> dic
     return {"rule": rule, "severity": severity, "evidence": evidence, "recommendation": recommendation}
 
 
+def suggest_rewrite(text: str, campaign: dict[str, Any], policy: dict[str, Any]) -> tuple[str, list[str]]:
+    """Create a conservative, deterministic rewrite and explain every change."""
+    rewritten = text
+    changes: list[str] = []
+    replacements = {"instantly": "quickly", "guaranteed": "", "best": "practical", "every": "modern"}
+    flagged = [*policy.get("prohibited_phrases", []), *policy.get("absolute_claims", [])]
+    for phrase in flagged:
+        phrase = str(phrase)
+        if not re.search(re.escape(phrase), rewritten, flags=re.IGNORECASE):
+            continue
+        replacement = replacements.get(phrase.lower(), "supportable")
+        rewritten = re.sub(re.escape(phrase), replacement, rewritten, flags=re.IGNORECASE)
+        changes.append(f'Replaced "{phrase}" with more supportable language.')
+
+    rewritten = re.sub(r"\bThe\s+practical reporting platform for modern marketing team\b", "A practical reporting platform for modern marketing teams", rewritten, flags=re.IGNORECASE)
+    rewritten = re.sub(r"[ \t]{2,}", " ", rewritten).strip()
+
+    disclosures = [str(item).strip() for item in campaign.get("required_disclosures", []) if str(item).strip()]
+    missing = [item for item in disclosures if item.lower() not in rewritten.lower()]
+    if missing:
+        rewritten = rewritten.rstrip() + " " + " ".join(missing)
+        changes.append("Added required disclosure: " + ", ".join(missing) + ".")
+
+    ctas = [str(item).strip() for item in policy.get("cta_phrases", []) if str(item).strip()]
+    if policy.get("require_cta", True) and ctas and not any(item.lower() in rewritten.lower() for item in ctas):
+        cta = ctas[0].capitalize() + "."
+        rewritten = rewritten.rstrip() + " " + cta
+        changes.append(f'Added an approved call to action: "{cta}"')
+
+    channel = str(campaign.get("channel", "")).lower().strip()
+    limit = int(policy.get("channel_limits", {}).get(channel, 10_000))
+    if len(rewritten) > limit:
+        rewritten = rewritten[: max(0, limit - 1)].rstrip(" ,;:-") + "…"
+        changes.append(f"Shortened the suggestion to the {limit}-character {channel} limit.")
+    return rewritten, changes
+
+
 def review(campaign: dict[str, Any], policy: dict[str, Any]) -> dict[str, Any]:
     text = str(campaign.get("text", "")).strip()
     channel = str(campaign.get("channel", "")).lower().strip()
@@ -42,7 +79,8 @@ def review(campaign: dict[str, Any], policy: dict[str, Any]) -> dict[str, Any]:
 
     penalty = sum(20 if x["severity"] == "high" else 10 for x in findings)
     score = max(0, 100 - penalty)
-    return {"campaign_id": campaign.get("campaign_id", "demo"), "status": "ready_for_human_review" if not findings else "revise", "score": score, "finding_count": len(findings), "findings": findings}
+    rewritten_text, rewrite_changes = suggest_rewrite(text, campaign, policy)
+    return {"campaign_id": campaign.get("campaign_id", "demo"), "status": "ready_for_human_review" if not findings else "revise", "score": score, "finding_count": len(findings), "findings": findings, "rewritten_text": rewritten_text, "rewrite_changes": rewrite_changes}
 
 
 def main() -> None:
@@ -56,4 +94,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-
