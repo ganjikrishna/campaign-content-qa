@@ -27,7 +27,15 @@ class CampaignQATests(unittest.TestCase):
         with self.assertRaises(ValueError):
             review(self.campaign, self.policy)
 
+    def test_rewrite_removes_flagged_language_and_adds_requirements(self):
+        result = review(self.campaign, self.policy)
+        rewritten = result["rewritten_text"].lower()
+        for phrase in ["instantly", "guaranteed", "best", "every"]:
+            self.assertNotIn(phrase, rewritten)
+        self.assertIn("terms apply", rewritten)
+        self.assertIn("learn more", rewritten)
+        self.assertGreaterEqual(len(result["rewrite_changes"]), 3)
+
 
 if __name__ == "__main__":
     unittest.main()
-
