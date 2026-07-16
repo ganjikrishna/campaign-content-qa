@@ -14,6 +14,7 @@ Marketing teams lose time to repetitive reviews and avoidable revision cycles. T
 - Validates channel length limits
 - Returns severity, evidence, and a recommended correction
 - Produces a publish recommendation without editing or publishing content
+- Suggests a conservative rewrite and explains each automatic change
 
 ## Architecture
 
