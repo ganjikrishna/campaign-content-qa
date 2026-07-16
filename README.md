@@ -1,5 +1,7 @@
 # Campaign Content QA
 
+![CI](https://github.com/ganjikrishna/campaign-content-qa/actions/workflows/ci.yml/badge.svg)
+
 An explainable preflight checker for marketing content. It reviews copy against configurable brand, claims, readability, channel, and call-to-action rules before a person approves publication.
 
 ## Business value
